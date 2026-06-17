@@ -3,6 +3,8 @@ import pandas as pd
 import time
 from datetime import datetime
 import json
+import requests
+import threading
 from ssl_hybrid import apply_ssl_hybrid
 from notifier import send_desktop_notification, send_email
 
@@ -100,6 +102,19 @@ def run_engine():
                     is_bullish = current['Alert_Bullish']
                     is_bearish = current['Alert_Bearish']
                     
+                    # --- GOOGLE SHEETS WEBHOOK ---
+                    webhook_url = config.get("google_sheets_webhook")
+                    if webhook_url and webhook_url.startswith("http"):
+                        status_str = "BULLISH" if is_bullish else "BEARISH" if is_bearish else "NOTHING YET"
+                        payload = {
+                            "ticker": ticker,
+                            "status": status_str,
+                            "price": float(current['Close']),
+                            "time": str(current_time)
+                        }
+                        # Run in background so we don't slow down the scanner!
+                        threading.Thread(target=lambda: requests.post(webhook_url, json=payload)).start()
+                        
                     if is_bullish or is_bearish:
                         direction = "BULLISH (UP)" if is_bullish else "BEARISH (DOWN)"
                         title = f"SSL Hybrid Alert: {ticker} {direction}"

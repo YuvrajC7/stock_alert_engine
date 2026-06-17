@@ -2,3 +2,4 @@ pandas
 pandas-ta
 yfinance
 plyer
+requests
