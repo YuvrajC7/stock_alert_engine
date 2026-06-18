@@ -30,8 +30,6 @@ function doPost(e) {
     bgColor = "#b7e1cd"; // Green
   } else if (data.status == "BEARISH") {
     bgColor = "#f4c7c3"; // Red
-  } else if (data.status == "NOTHING YET") {
-    bgColor = "#e2e3e5"; // Gray
   }
   
   // If ticker exists, update the row. Otherwise, create a new row!
