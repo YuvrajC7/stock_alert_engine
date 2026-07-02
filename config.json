@@ -54,6 +54,7 @@
     ],
     "interval": "5m",
     "google_sheets_webhook": "PASTE_YOUR_WEB_APP_URL_HERE",
+    "diy_google_sheets_webhook": "PASTE_YOUR_NEW_WEB_APP_URL_HERE",
     "email": {
         "sender": "your_email@gmail.com",
         "password": "your_app_password",
