@@ -125,7 +125,7 @@ def main():
         return
         
     tickers = config.get("diy_tickers", config.get("tickers", []))
-    interval = config.get("interval", "5m")
+    interval = config.get("diy_interval", config.get("interval", "5m"))
     webhook_url = config.get("diy_google_sheets_webhook")
     
     if not webhook_url or "PASTE_YOUR_NEW" in webhook_url:
