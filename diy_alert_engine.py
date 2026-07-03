@@ -7,6 +7,7 @@ import numpy as np
 import math
 import yfinance as yf
 from datetime import datetime, timezone
+from notifier import send_email
 
 def load_config():
     try:
@@ -245,7 +246,13 @@ def main():
                     status_str = "BULLISH" if is_bullish else "BEARISH"
                     direction = "BULLISH (UP)" if is_bullish else "BEARISH (DOWN)"
                     
+                    title = f"DIY Strategy Alert: {ticker} {direction}"
+                    message = f"{ticker} has fired a confirmed DIY {direction} signal on {interval} chart at {current['Close']:.2f} (Time: {current_time})."
+                    
                     print(f"DIY SIGNAL: {ticker} is {direction} at {current_time}")
+                    
+                    # Send Email Alert
+                    send_email(title, message)
                     
                     # POST to Google Sheets
                     if webhook_url and webhook_url.startswith("http"):
