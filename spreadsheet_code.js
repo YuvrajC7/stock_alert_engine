@@ -48,11 +48,11 @@ function doPost(e) {
     sheet.getRange(newRow, 2).setBackground(bgColor);
   }
   
-  // 3. SORT ALL STOCKS IN ASCENDING ORDER (Alphabetical by Ticker)
+  // 3. SORT ALL STOCKS BY TIME (Newest on top)
   if (sheet.getLastRow() > 1) {
     // Get the range of all data EXCEPT the header row
     var sortRange = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn());
-    sortRange.sort({column: 1, ascending: true});
+    sortRange.sort({column: 4, ascending: false});
   }
   
   return ContentService.createTextOutput("Success");
