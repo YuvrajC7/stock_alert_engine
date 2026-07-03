@@ -107,6 +107,26 @@ def calculate_rqk(df, h2=8.0, r=8.0, x_0=25, lag=2):
     
     return rqkuptrend, rqkdowntrend
 
+def resample_custom(df, target_interval_minutes):
+    """
+    Takes 15m data and perfectly stitches it into 30m or 60m candles starting at 09:15.
+    This fixes the Yahoo Finance misalignment bug for Indian markets.
+    """
+    shifted = df.copy()
+    shift_mins = target_interval_minutes - 15
+    shifted.index = shifted.index + pd.Timedelta(minutes=shift_mins)
+    
+    resampled = shifted.resample(f'{target_interval_minutes}min').agg({
+        'Open': 'first',
+        'High': 'max',
+        'Low': 'min',
+        'Close': 'last',
+        'Volume': 'sum'
+    }).dropna()
+    
+    resampled.index = resampled.index - pd.Timedelta(minutes=shift_mins)
+    return resampled
+
 def count_consecutive(series):
     streak = 0
     res = []
@@ -134,12 +154,23 @@ def main():
         print("Connected to Google Sheets Webhook!")
     
     # Determine lookback period based on interval
-    if interval.endswith("m"):
-        period = "1mo"
-    elif interval.endswith("h"):
+    if interval in ["1m", "2m", "5m"]:
+        period = "5d"
+    elif interval in ["15m", "30m", "60m", "90m", "1h"]:
         period = "1mo"
     else:
         period = "1y"
+        
+    fetch_interval = interval
+    resample_minutes = None
+    
+    # If the user wants 30m or 60m, we fetch perfectly aligned 15m data and stitch it together.
+    if interval == "30m":
+        fetch_interval = "15m"
+        resample_minutes = 30
+    elif interval in ["1h", "60m"]:
+        fetch_interval = "15m"
+        resample_minutes = 60
         
     # State tracking
     last_processed_time = {ticker: None for ticker in tickers}
@@ -150,13 +181,20 @@ def main():
         for ticker in tickers:
             try:
                 # Download historical data
-                df = yf.download(ticker, period=period, interval=interval, progress=False)
-                if df.empty or len(df) < 100:
+                df = yf.download(ticker, period=period, interval=fetch_interval, progress=False)
+                if df.empty or len(df) < 65:
                     continue
                     
                 # Fix pandas multi-level columns if present
                 if isinstance(df.columns, pd.MultiIndex):
                     df.columns = df.columns.get_level_values(0)
+                    
+                # Stitch the 15m candles into perfectly aligned 30m/60m candles if needed
+                if resample_minutes:
+                    df = resample_custom(df, resample_minutes)
+                    
+                if df.empty or len(df) < 65:
+                    continue
                     
                 # 1. Range Filter
                 rfupward, rfdownward = calculate_range_filter(df)
